@@ -43,7 +43,7 @@ def fail(message, code=1):
     exit(code)
 
 
-def read_script(script_path):
+def read_script(script_path, alphabet, args):
     tc = TextCleaner(alphabet,
                      dashes_to_ws=not args.text_keep_dashes,
                      normalize_space=not args.text_keep_ws,
@@ -78,11 +78,11 @@ def stt(sample):
     return time_start, time_end, ' '.join(transcript.split())
 
 
-def align(triple):
-    tlog, script, aligned = triple
+def align(quintuple):
+    tlog, script, aligned, alphabet, args = quintuple
 
     logging.debug("Loading script from %s..." % script)
-    tc = read_script(script)
+    tc = read_script(script, alphabet, args)
     search = FuzzySearch(tc.clean_text,
                          max_candidates=args.align_max_candidates,
                          candidate_threshold=args.align_candidate_threshold,
@@ -356,7 +356,7 @@ def align(triple):
     return aligned, len(result_fragments), len(fragments) - len(result_fragments), reasons
 
 
-def main():
+def main(alphabet, model_format, args):
     # Debug helpers
     logging.basicConfig()
     logging.root.setLevel(args.loglevel if args.loglevel else 20)
@@ -428,11 +428,8 @@ def main():
             kenlm_path = 'dependencies/kenlm/build/bin'
             if not path.exists(kenlm_path):
                 kenlm_path = None
-            deepspeech_path = 'dependencies/deepspeech'
-            if not path.exists(deepspeech_path):
-                deepspeech_path = None
-            if kenlm_path and deepspeech_path and not args.stt_no_own_lm:
-                tc = read_script(script_path)
+            if kenlm_path and not args.stt_no_own_lm:
+                tc = read_script(script_path, alphabet, args)
                 if not tc.clean_text.strip():
                     logging.error('Cleaned transcript is empty for {}'.format(path.basename(script_path)))
                     continue
@@ -510,7 +507,7 @@ def main():
                 os.remove(scorer_path)
         if not path.isfile(tlog_path):
             fail('Problem loading transcript from "{}"'.format(tlog_path))
-        to_align.append((tlog_path, script_path, aligned_path))
+        to_align.append((tlog_path, script_path, aligned_path, alphabet, args))
 
     total_fragments = 0
     dropped_fragments = 0
@@ -679,4 +676,4 @@ if __name__ == '__main__':
     logging.debug('Loading alphabet from "{}"...'.format(alphabet_path))
     alphabet = Alphabet(alphabet_path)
     model_format = (args.stt_model_rate, 1, 2)
-    main()
+    main(alphabet, model_format, args)

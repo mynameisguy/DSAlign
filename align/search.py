@@ -83,6 +83,7 @@ class FuzzySearch(object):
         end = len(self.text) if end < 0 else end
         if end - start < 2 * len(look_for):
             return self.sw_align(look_for, start, end)
+        middle = (end - start) / 2
         window_size = len(look_for)
         windows = {}
         for i, ngram in enumerate(ngrams(' ' + look_for + ' ', 3)):
@@ -105,5 +106,7 @@ class FuzzySearch(object):
             interval_end = min(end, int((window + 2) * window_size))
             search_result = self.sw_align(look_for, interval_start, interval_end)
             if search_result[2] > best[2]:
+                best = search_result
+            elif search_result[2] == best[2] and abs(middle - search_result[0]) < abs(middle - best[0]):
                 best = search_result
         return best

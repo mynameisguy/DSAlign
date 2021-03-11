@@ -120,7 +120,7 @@ def enweight(items, direction=0):
     if n < 1:
         if n == 0:
             yield items[0], 1
-        raise StopIteration
+        return
     for i, item in enumerate(items):
         c = (i + n * (direction - 1) / 2) / n
         yield item, c * c * (4 - abs(direction) * 3)
